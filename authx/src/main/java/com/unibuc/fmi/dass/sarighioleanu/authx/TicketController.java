@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Controller
 public class TicketController {
@@ -34,6 +35,18 @@ public class TicketController {
             @RequestParam(required = false) String query,
             Model model
     ) {
+
+        String ownerEmail = "";
+
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if(principal instanceof UserDetails) {
+            ownerEmail = ((UserDetails)principal).getUsername();
+        } else{
+            ownerEmail = principal.toString();
+        }
+        User owner = userService.loadUserByEmail(ownerEmail);
+
+
         List<Ticket> tickets;
 
         if (query != null && !query.trim().isEmpty()) {
@@ -41,6 +54,8 @@ public class TicketController {
         } else {
             tickets = ticketService.getTickets();
         }
+
+        tickets = tickets.stream().filter(t -> Objects.equals(t.getOwner().getId(), owner.getId())).toList();
 
         model.addAttribute("tickets", tickets);
         model.addAttribute("query", query);
