@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="utf-8">
+        <title>Create ticket</title>
+    </head>
+    <body>
+        <a th:href="@{/tickets}">Back</a>
+        <h1>Create ticket</h1>
+        <form th:action="@{/create-ticket}" method="post" th:object="${ticket}">
+            <label>
+                Title:
+                <input type="text" th:field="*{title}" placeholder="Ticket title" required/>
+            </label>
+
+            <br />
+            <br />
+
+            <label>
+                Description:
+                <textarea th:field="*{description}" placeholder="Ticket description" required></textarea>
+            </label>
+
+            <br />
+            <br />
+
+            <label for="severityLevel">SeverityLevel:</label>
+            <select th:field="*{severityLevel}" id="severityLevel" required>
+                <option th:each="severityLevel : ${severityLevels}" th:value="${severityLevel}" th:text="${severityLevel.name()}"></option>
+            </select>
+
+            <br />
+            <br />
+
+<!--            <label for="status">Status:</label>-->
+<!--            <select th:field="*{status}" id="status">-->
+<!--                <option th:each="status : ${statusList}">-->
+<!--            </select>-->
+
+            <button type="submit">Create</button>
+        </form>
+    </body>
+</html>

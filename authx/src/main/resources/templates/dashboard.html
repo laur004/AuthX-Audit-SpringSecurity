@@ -6,6 +6,11 @@
     </head>
     <body>
         <h1>Dashboard Page</h1>
+
+        <a th:href="@{/tickets}">See tickets</a>
+        <br /> <br />
+        <hr />
+
         <form th:action="@{/logout}" method="post">
             <button type="submit">Logout</button>
         </form>

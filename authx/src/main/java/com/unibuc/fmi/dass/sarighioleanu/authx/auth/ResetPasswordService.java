@@ -1,7 +1,9 @@
 package com.unibuc.fmi.dass.sarighioleanu.authx.auth;
 
-import com.unibuc.fmi.dass.sarighioleanu.authx.UserRepository;
+import com.unibuc.fmi.dass.sarighioleanu.authx.repository.UserRepository;
+import com.unibuc.fmi.dass.sarighioleanu.authx.model.PasswordResetToken;
 import com.unibuc.fmi.dass.sarighioleanu.authx.model.User;
+import com.unibuc.fmi.dass.sarighioleanu.authx.repository.PasswordResetTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

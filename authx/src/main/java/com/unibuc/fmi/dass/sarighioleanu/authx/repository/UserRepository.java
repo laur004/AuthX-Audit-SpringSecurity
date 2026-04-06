@@ -1,4 +1,4 @@
-package com.unibuc.fmi.dass.sarighioleanu.authx;
+package com.unibuc.fmi.dass.sarighioleanu.authx.repository;
 
 import com.unibuc.fmi.dass.sarighioleanu.authx.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;

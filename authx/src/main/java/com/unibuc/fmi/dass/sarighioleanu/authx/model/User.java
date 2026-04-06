@@ -1,6 +1,5 @@
 package com.unibuc.fmi.dass.sarighioleanu.authx.model;
 
-import com.unibuc.fmi.dass.sarighioleanu.authx.auth.PasswordResetToken;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import org.hibernate.annotations.CreationTimestamp;
@@ -13,8 +12,10 @@ import java.util.List;
 @Table(name = "users")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+//    @GeneratedValue(strategy = GenerationType.UUID)
+//    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(nullable = false, unique = true)
     @Email
@@ -44,7 +45,8 @@ public class User {
     private List<PasswordResetToken>  passwordResetTokens = new ArrayList<>();
 
     public User(
-            String id,
+            //String id,
+            Long id,
             String email,
             String passwordHash,
             UserRole role,
@@ -67,7 +69,10 @@ public class User {
 
     public User() {}
 
-    public String getId() {
+//    public String getId() {
+//        return id;
+//    }
+    public Long getId() {
         return id;
     }
 
@@ -103,7 +108,10 @@ public class User {
         return passwordResetTokens;
     }
 
-    public void setId(String id) {
+//    public void setId(String id) {
+//        this.id = id;
+//    }
+    public void setId(Long id) {
         this.id = id;
     }
 

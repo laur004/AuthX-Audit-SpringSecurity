@@ -1,5 +1,6 @@
-package com.unibuc.fmi.dass.sarighioleanu.authx.auth;
+package com.unibuc.fmi.dass.sarighioleanu.authx.repository;
 
+import com.unibuc.fmi.dass.sarighioleanu.authx.model.PasswordResetToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

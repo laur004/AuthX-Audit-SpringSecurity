@@ -1,9 +1,6 @@
-package com.unibuc.fmi.dass.sarighioleanu.authx.auth;
+package com.unibuc.fmi.dass.sarighioleanu.authx.model;
 
-import com.unibuc.fmi.dass.sarighioleanu.authx.model.User;
 import jakarta.persistence.*;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "password_reset_tokens")

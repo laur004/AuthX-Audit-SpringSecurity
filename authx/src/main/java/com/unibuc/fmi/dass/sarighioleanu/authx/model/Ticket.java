@@ -10,8 +10,10 @@ import java.time.OffsetDateTime;
 @Table(name = "tickets")
 public class Ticket {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+//    @GeneratedValue(strategy = GenerationType.UUID)
+//    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(nullable = false, length = 200)
     private String title;
@@ -38,7 +40,17 @@ public class Ticket {
     @UpdateTimestamp
     private OffsetDateTime updatedAt;
 
-    public Ticket(String id, String title, String description, TicketSeverityLevel severityLevel, TicketStatus status, User owner, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+    public Ticket(
+        //String id,
+        Long id,
+        String title,
+        String description,
+        TicketSeverityLevel severityLevel,
+        TicketStatus status,
+        User owner,
+        OffsetDateTime createdAt,
+        OffsetDateTime updatedAt
+    ) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -51,7 +63,10 @@ public class Ticket {
 
     public Ticket() {}
 
-    public String getId() {
+//    public String getId() {
+//        return id;
+//    }
+    public Long getId() {
         return id;
     }
 
@@ -83,7 +98,10 @@ public class Ticket {
         return updatedAt;
     }
 
-    public void setId(String id) {
+//    public void setId(String id) {
+//        this.id = id;
+//    }
+    public void setId(Long id) {
         this.id = id;
     }
 

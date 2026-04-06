@@ -1,7 +1,8 @@
 package com.unibuc.fmi.dass.sarighioleanu.authx.auth;
 
-import com.unibuc.fmi.dass.sarighioleanu.authx.UserRepository;
+import com.unibuc.fmi.dass.sarighioleanu.authx.repository.UserRepository;
 import com.unibuc.fmi.dass.sarighioleanu.authx.model.UserRole;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.unibuc.fmi.dass.sarighioleanu.authx.model.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -34,6 +35,12 @@ public class UserService implements UserDetailsService {
                 .authorities(user.getRole().name())
                 .build();
 
+    }
+
+    @Transactional
+    public User loadUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     public void registerUser(String email, String rawPassword) throws EmailAlreadyExistsException {

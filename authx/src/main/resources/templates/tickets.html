@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="utf-8">
+        <title>Tickets Page</title>
+    </head>
+    <body>
+        <h1>Tickets Page</h1>
+        <a th:href="@{/create-ticket}" >Create ticket</a>
+
+        <br />
+        <br />
+        <form th:action="@{/tickets}" method="get">
+            <input type="text" name="query" th:value="${query}" placeholder="Search tickets..." />
+            <button type="submit">Search</button>
+        </form>
+        <br />
+
+
+        <ul th:each="ticket: ${tickets}">
+            <li th:text="|${ticket.getTitle()}
+            - ${ticket.getSeverityLevel().name()}
+            - ${ticket.getStatus()},
+            created at ${ticket.createdAt.toString()} ,
+            last update at ${ticket.updatedAt.toString()}|">
+
+            </li>
+            <a th:href="@{/edit-ticket/{ticketId}(ticketId=${ticket.getId()})}">Edit ticket</a>
+        </ul>
+
+    </body>
+</html>

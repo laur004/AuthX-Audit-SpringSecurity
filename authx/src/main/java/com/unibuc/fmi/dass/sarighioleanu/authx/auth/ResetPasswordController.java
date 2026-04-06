@@ -1,5 +1,7 @@
 package com.unibuc.fmi.dass.sarighioleanu.authx.auth;
 
+import com.unibuc.fmi.dass.sarighioleanu.authx.dto.ForgotPasswordRequest;
+import com.unibuc.fmi.dass.sarighioleanu.authx.dto.ResetPasswordRequest;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,7 +21,9 @@ public class ResetPasswordController {
     }
 
     @GetMapping("/forgot-password")
-    public String forgotPasswordPage(@ModelAttribute("forgotPasswordRequest") ForgotPasswordRequest request) {
+    public String forgotPasswordPage(
+            @ModelAttribute("forgotPasswordRequest") ForgotPasswordRequest request
+    ) {
         return "forgot-password";
     }
 
@@ -39,7 +43,10 @@ public class ResetPasswordController {
     }
 
     @GetMapping("/reset-password")
-    public String resetPasswordPage(@RequestParam String token, Model model) {
+    public String resetPasswordPage(
+            @RequestParam String token,
+            Model model
+    ) {
         ResetPasswordRequest request = new ResetPasswordRequest();
         request.setToken(token);
         model.addAttribute("resetPasswordRequest", request);

@@ -1,4 +1,4 @@
-package com.unibuc.fmi.dass.sarighioleanu.authx.auth;
+package com.unibuc.fmi.dass.sarighioleanu.authx.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
