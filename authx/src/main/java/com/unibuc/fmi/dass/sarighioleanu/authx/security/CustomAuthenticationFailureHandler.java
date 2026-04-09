@@ -17,14 +17,18 @@ import java.nio.charset.StandardCharsets;
 public class CustomAuthenticationFailureHandler implements AuthenticationFailureHandler {
 
     @Override
-    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
+    public void onAuthenticationFailure(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            AuthenticationException exception
+    ) throws IOException, ServletException {
         String emailError = "";
         String passwordError = "";
 
         if(exception instanceof UsernameNotFoundException) {
             emailError = "Email not found";
         } else if(exception instanceof BadCredentialsException){
-            passwordError = "Password invalid";
+            passwordError = "Invalid password";
         } else {
             emailError = "Authentication Failed";
         }

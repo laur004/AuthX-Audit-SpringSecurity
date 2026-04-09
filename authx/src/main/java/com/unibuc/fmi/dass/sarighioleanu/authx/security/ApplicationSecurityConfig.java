@@ -34,15 +34,6 @@ public class ApplicationSecurityConfig {
         return provider;
     }
 
-//    @Bean
-//    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-//        return http.getSharedObject(AuthenticationManagerBuilder.class)
-//                .authenticationProvider(daoAuthenticationProvider())
-//                .build();
-//    }
-
-
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
