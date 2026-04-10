@@ -5,6 +5,8 @@ import com.unibuc.fmi.dass.sarighioleanu.authx.model.UserRole;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.unibuc.fmi.dass.sarighioleanu.authx.model.User;
+import org.springframework.security.authentication.password.CompromisedPasswordChecker;
+import org.springframework.security.authentication.password.CompromisedPasswordDecision;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,11 +18,17 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CompromisedPasswordChecker compromisedPasswordChecker;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            CompromisedPasswordChecker compromisedPasswordChecker
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.compromisedPasswordChecker = compromisedPasswordChecker;
     }
 
     @Override
@@ -44,8 +52,17 @@ public class UserService implements UserDetailsService {
     }
 
     public void registerUser(String email, String rawPassword) throws EmailAlreadyExistsException {
-        if (userRepository.findByEmail(email).isPresent()) {
+        if (userRepository.findByEmail(email.toLowerCase()).isPresent()) {
             throw new EmailAlreadyExistsException("Email already in use");
+        }
+
+        if (rawPassword == null || rawPassword.length() < 8 || !rawPassword.matches("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^A-Za-z\\d]).+$")) {
+            throw new PasswordUnacceptableException("Password should be at least 8 characters and contain at least upper, lower, digit and special character.");
+        }
+
+        CompromisedPasswordDecision decision = compromisedPasswordChecker.check(rawPassword);
+        if (decision.isCompromised()) {
+            throw new PasswordUnacceptableException("Choose a different password.");
         }
 
         User user = new User();

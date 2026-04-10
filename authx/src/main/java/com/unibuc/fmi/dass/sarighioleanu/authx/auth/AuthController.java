@@ -45,6 +45,9 @@ public class AuthController {
         } catch (EmailAlreadyExistsException e) {
             bindingResult.rejectValue("email", "email.exists", e.getMessage());
             return "register";
+        } catch (PasswordUnacceptableException e) {
+            bindingResult.rejectValue("password", "password.unacceptable", e.getMessage());
+            return "register";
         }
 
         return "redirect:/login?registered";
