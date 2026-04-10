@@ -14,13 +14,17 @@ public class ApplicationSecurityConfig {
 
     private final PasswordEncoder passwordEncoder;
     private final UserService userService;
-    private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
+    //private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
 
     @Autowired
-    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder, UserService userService,  CustomAuthenticationFailureHandler customAuthenticationFailureHandler) {
+    public ApplicationSecurityConfig(
+            PasswordEncoder passwordEncoder,
+            UserService userService
+            //CustomAuthenticationFailureHandler customAuthenticationFailureHandler
+    ){
         this.passwordEncoder = passwordEncoder;
         this.userService = userService;
-        this.customAuthenticationFailureHandler = customAuthenticationFailureHandler;
+        //this.customAuthenticationFailureHandler = customAuthenticationFailureHandler;
     }
 
 
@@ -28,9 +32,8 @@ public class ApplicationSecurityConfig {
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userService);
         provider.setPasswordEncoder(passwordEncoder);
-
-        provider.setHideUserNotFoundExceptions(false);
-
+        //By default, is set to: true
+        //provider.setHideUserNotFoundExceptions(true);
         return provider;
     }
 
@@ -53,9 +56,6 @@ public class ApplicationSecurityConfig {
                 .formLogin(form ->
                         form.loginPage("/login")
                                 .permitAll()
-                                .usernameParameter("email")
-                                .passwordParameter("password")
-                                .failureHandler(customAuthenticationFailureHandler)
                                 .defaultSuccessUrl("/dashboard", true)
                 )
                 .logout(logout -> logout

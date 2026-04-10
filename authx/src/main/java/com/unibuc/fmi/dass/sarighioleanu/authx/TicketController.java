@@ -7,12 +7,13 @@ import com.unibuc.fmi.dass.sarighioleanu.authx.model.TicketSeverityLevel;
 import com.unibuc.fmi.dass.sarighioleanu.authx.model.TicketStatus;
 import com.unibuc.fmi.dass.sarighioleanu.authx.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -109,7 +110,8 @@ public class TicketController {
             @PathVariable Long ticketId,
             Model model
     ) {
-        Ticket ticket = ticketService.getTicketById(ticketId);
+        Ticket ticket = getTicketAndCheckOwnership(ticketId);
+
         model.addAttribute("ticket", ticket);
         model.addAttribute("severityLevels", TicketSeverityLevel.values());
         model.addAttribute("statusList", TicketStatus.values());
@@ -121,7 +123,7 @@ public class TicketController {
     public String editTicket(
             @ModelAttribute("ticket") Ticket formTicket
     ){
-        Ticket existingTicket = ticketService.getTicketById(formTicket.getId());
+        Ticket existingTicket = getTicketAndCheckOwnership(formTicket.getId());
 
         existingTicket.setTitle(formTicket.getTitle());
         existingTicket.setDescription(formTicket.getDescription());
@@ -138,9 +140,24 @@ public class TicketController {
     public String deleteTicket(
             @PathVariable Long ticketId
     ){
-        ticketService.deleteTicketById(ticketId);
-
+        Ticket ticket = getTicketAndCheckOwnership(ticketId);
+        ticketService.deleteTicketById(ticket.getId());
         return "redirect:/tickets";
+    }
+
+    private Ticket getTicketAndCheckOwnership(@PathVariable Long ticketId) {
+        String ownerEmail = "";
+
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if(principal instanceof UserDetails) {
+            ownerEmail = ((UserDetails)principal).getUsername();
+        } else{
+            ownerEmail = principal.toString();
+        }
+        User owner = userService.loadUserByEmail(ownerEmail);
+
+        return ticketService.getTicketForOwner(ticketId, owner.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied"));
     }
 
 }

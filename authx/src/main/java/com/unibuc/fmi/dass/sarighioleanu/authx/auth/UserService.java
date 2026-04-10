@@ -51,10 +51,10 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
-    public void registerUser(String email, String rawPassword) throws EmailAlreadyExistsException {
-        if (userRepository.findByEmail(email.toLowerCase()).isPresent()) {
-            throw new EmailAlreadyExistsException("Email already in use");
-        }
+    public void registerUser(String email, String rawPassword) throws PasswordUnacceptableException {
+//        if (userRepository.findByEmail(email.toLowerCase()).isPresent()) {
+//            throw new EmailAlreadyExistsException("Email already in use");
+//        }
 
         if (rawPassword == null || rawPassword.length() < 8 || !rawPassword.matches("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^A-Za-z\\d]).+$")) {
             throw new PasswordUnacceptableException("Password should be at least 8 characters and contain at least upper, lower, digit and special character.");

@@ -38,7 +38,7 @@ public class ResetPasswordController {
         }
 
         resetPasswordService.requestPasswordReset(request.getEmail());
-        model.addAttribute("message", "If the account exists, a reset link has been generated.");
+        model.addAttribute("message", "A reset link has been sent to your email address.");
         return "forgot-password";
     }
 
@@ -64,6 +64,9 @@ public class ResetPasswordController {
 
         try {
             resetPasswordService.resetPassword(request.getToken(), request.getNewPassword());
+        } catch (PasswordUnacceptableException e){
+            bindingResult.rejectValue("newPassword", "newPassword.unacceptable", e.getMessage());
+            return "reset-password";
         } catch (IllegalArgumentException | IllegalStateException e) {
             bindingResult.reject("token", e.getMessage());
             return "reset-password";
