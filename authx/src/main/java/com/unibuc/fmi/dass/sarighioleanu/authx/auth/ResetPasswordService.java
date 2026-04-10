@@ -10,6 +10,8 @@ import org.springframework.security.authentication.password.CompromisedPasswordD
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 public class ResetPasswordService {
 
@@ -48,6 +50,8 @@ public class ResetPasswordService {
         PasswordResetToken resetToken = new PasswordResetToken();
         resetToken.setToken(token);
         resetToken.setUser(user);
+        resetToken.setExpiresAt(LocalDateTime.now().plusMinutes(5));
+        resetToken.setUsed(false);
         passwordResetTokenRepository.save(resetToken);
 
         emailService.sendResetPasswordEmail(
@@ -59,6 +63,10 @@ public class ResetPasswordService {
     public void resetPassword(String rawToken, String newPassword) {
         PasswordResetToken token = passwordResetTokenRepository.findByToken(rawToken)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
+
+        if(token.isUsed() || token.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new ResetPasswordTokenExpiredException("Token expired. Please generate another token.");
+        }
 
         if (newPassword == null || newPassword.length() < 8 || !newPassword.matches("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^A-Za-z\\d]).+$")) {
             throw new PasswordUnacceptableException("Password should be at least 8 characters and contain at least upper, lower, digit and special character.");
@@ -72,6 +80,9 @@ public class ResetPasswordService {
         User user = token.getUser();
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+
+         token.setUsed(true);
+         passwordResetTokenRepository.save(token);
     }
 
 }

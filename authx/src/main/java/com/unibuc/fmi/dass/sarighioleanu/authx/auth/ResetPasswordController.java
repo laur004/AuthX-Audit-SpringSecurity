@@ -67,6 +67,9 @@ public class ResetPasswordController {
         } catch (PasswordUnacceptableException e){
             bindingResult.rejectValue("newPassword", "newPassword.unacceptable", e.getMessage());
             return "reset-password";
+        } catch (ResetPasswordTokenExpiredException e) {
+            bindingResult.reject("token.expired", e.getMessage());
+            return "reset-password";
         } catch (IllegalArgumentException | IllegalStateException e) {
             bindingResult.reject("token", e.getMessage());
             return "reset-password";
