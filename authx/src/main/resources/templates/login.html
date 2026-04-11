@@ -8,6 +8,7 @@
         <h1>Please Log In</h1>
         <form th:action="@{/login}" method="post">
             <p th:if="${param.error}">Invalid email or password</p>
+            <p th:if="${param.locked}">Too many failed login attempts. Try again later.</p>
             <div>
                 <input type="email" name="username" placeholder="Email" required/>
             </div>

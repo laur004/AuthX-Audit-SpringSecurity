@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,8 +14,6 @@ import java.util.List;
 @Table(name = "users")
 public class User {
     @Id
-//    @GeneratedValue(strategy = GenerationType.UUID)
-//    private String id;
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -35,6 +35,12 @@ public class User {
     @Column(nullable = false)
     private boolean locked;
 
+    @Column(name = "failed_login_attempts", nullable = false)
+    private int failedLoginAttempts=0;
+
+    @Column(name = "locked_until")
+    private LocalDateTime lockedUntil;
+
     @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
     private List<Ticket> tickets = new ArrayList<>();
 
@@ -45,13 +51,14 @@ public class User {
     private List<PasswordResetToken>  passwordResetTokens = new ArrayList<>();
 
     public User(
-            //String id,
             Long id,
             String email,
             String passwordHash,
             UserRole role,
             OffsetDateTime createdAt,
             boolean locked,
+            int failedLoginAttempts,
+            LocalDateTime lockedUntil,
             List<Ticket> tickets,
             List<AuditLog> auditLogs,
             List<PasswordResetToken> passwordResetTokens
@@ -62,6 +69,8 @@ public class User {
         this.role = role;
         this.createdAt = createdAt;
         this.locked = locked;
+        this.failedLoginAttempts = failedLoginAttempts;
+        this.lockedUntil = lockedUntil;
         this.tickets = tickets;
         this.auditLogs = auditLogs;
         this.passwordResetTokens = passwordResetTokens;
@@ -69,9 +78,6 @@ public class User {
 
     public User() {}
 
-//    public String getId() {
-//        return id;
-//    }
     public Long getId() {
         return id;
     }
@@ -145,5 +151,21 @@ public class User {
 
     public void setPasswordResetTokens(List<PasswordResetToken> passwordResetTokens) {
         this.passwordResetTokens = passwordResetTokens;
+    }
+
+    public int getFailedLoginAttempts() {
+        return failedLoginAttempts;
+    }
+
+    public void setFailedLoginAttempts(int failedLoginAttempts) {
+        this.failedLoginAttempts = failedLoginAttempts;
+    }
+
+    public LocalDateTime getLockedUntil() {
+        return lockedUntil;
+    }
+
+    public void setLockedUntil(LocalDateTime lockedUntil) {
+        this.lockedUntil = lockedUntil;
     }
 }

@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -37,10 +38,19 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
+        if(user.getLockedUntil() != null && LocalDateTime.now().isAfter(user.getLockedUntil())){
+            user.setFailedLoginAttempts(0);
+            user.setLockedUntil(null);
+            userRepository.save(user);
+        }
+
+        boolean accountUnlocked = user.getLockedUntil() == null || LocalDateTime.now().isAfter(user.getLockedUntil());
+
         return  org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())
                 .password(user.getPasswordHash())
                 .authorities(user.getRole().name())
+                .accountLocked(!accountUnlocked)
                 .build();
 
     }
@@ -52,9 +62,9 @@ public class UserService implements UserDetailsService {
     }
 
     public void registerUser(String email, String rawPassword) throws PasswordUnacceptableException {
-//        if (userRepository.findByEmail(email.toLowerCase()).isPresent()) {
-//            throw new EmailAlreadyExistsException("Email already in use");
-//        }
+        if (userRepository.findByEmail(email.toLowerCase()).isPresent()) {
+            throw new EmailAlreadyExistsException("Email already in use");
+        }
 
         if (rawPassword == null || rawPassword.length() < 8 || !rawPassword.matches("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^A-Za-z\\d]).+$")) {
             throw new PasswordUnacceptableException("Password should be at least 8 characters and contain at least upper, lower, digit and special character.");
