@@ -2,10 +2,7 @@ package com.unibuc.fmi.dass.sarighioleanu.authx;
 
 import com.unibuc.fmi.dass.sarighioleanu.authx.auth.UserService;
 import com.unibuc.fmi.dass.sarighioleanu.authx.dto.TicketRequest;
-import com.unibuc.fmi.dass.sarighioleanu.authx.model.Ticket;
-import com.unibuc.fmi.dass.sarighioleanu.authx.model.TicketSeverityLevel;
-import com.unibuc.fmi.dass.sarighioleanu.authx.model.TicketStatus;
-import com.unibuc.fmi.dass.sarighioleanu.authx.model.User;
+import com.unibuc.fmi.dass.sarighioleanu.authx.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -56,7 +53,11 @@ public class TicketController {
             tickets = ticketService.getTickets();
         }
 
-        tickets = tickets.stream().filter(t -> Objects.equals(t.getOwner().getId(), owner.getId())).toList();
+        if(owner.getRole() == UserRole.MANAGER) {
+            model.addAttribute("showOwner", true);
+        }else{
+            tickets = tickets.stream().filter(t -> Objects.equals(t.getOwner().getId(), owner.getId())).toList();
+        }
 
         model.addAttribute("tickets", tickets);
         model.addAttribute("query", query);
@@ -155,6 +156,10 @@ public class TicketController {
             ownerEmail = principal.toString();
         }
         User owner = userService.loadUserByEmail(ownerEmail);
+
+        if(owner.getRole() == UserRole.MANAGER) {
+            return ticketService.getTicketById(ticketId);
+        }
 
         return ticketService.getTicketForOwner(ticketId, owner.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied"));
