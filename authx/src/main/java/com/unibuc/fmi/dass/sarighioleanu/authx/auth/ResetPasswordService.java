@@ -85,4 +85,10 @@ public class ResetPasswordService {
          passwordResetTokenRepository.save(token);
     }
 
+    public User findUserByToken(String token) {
+        return passwordResetTokenRepository.findByToken(token)
+                .map(PasswordResetToken::getUser)
+                .orElse(null);
+    }
+
 }

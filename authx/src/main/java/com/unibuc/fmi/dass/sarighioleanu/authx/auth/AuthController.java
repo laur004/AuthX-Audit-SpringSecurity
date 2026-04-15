@@ -1,5 +1,11 @@
 package com.unibuc.fmi.dass.sarighioleanu.authx.auth;
 
+import com.unibuc.fmi.dass.sarighioleanu.authx.AuditLogService;
+import com.unibuc.fmi.dass.sarighioleanu.authx.model.AuditAction;
+import com.unibuc.fmi.dass.sarighioleanu.authx.model.AuditResource;
+import com.unibuc.fmi.dass.sarighioleanu.authx.model.AuditStatus;
+import com.unibuc.fmi.dass.sarighioleanu.authx.model.User;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -14,6 +20,9 @@ public class AuthController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private AuditLogService auditLogService;
 
     @GetMapping("/login")
     public String login(){
@@ -34,19 +43,46 @@ public class AuthController {
     @PostMapping("/register")
     public String register(
             @Valid @ModelAttribute("registerRequest") RegisterRequest registerRequest,
-            BindingResult bindingResult
+            BindingResult bindingResult,
+            HttpServletRequest request
     ) {
         if (bindingResult.hasErrors()) {
             return "register";
         }
 
         try {
-            userService.registerUser(registerRequest.getEmail(), registerRequest.getPassword());
+            User registeredUser = userService.registerUser(registerRequest.getEmail(), registerRequest.getPassword());
+
+            auditLogService.logAuth(
+                    registeredUser,
+                    AuditAction.REGISTER,
+                    AuditStatus.SUCCESS,
+                    AuditResource.AUTH,
+                    request.getRemoteAddr()
+            );
         } catch (EmailAlreadyExistsException e) {
             bindingResult.rejectValue("email", "email.exists", e.getMessage());
+
+            auditLogService.logAuth(
+                    null,
+                    AuditAction.REGISTER,
+                    AuditStatus.FAILURE,
+                    AuditResource.AUTH,
+                    request.getRemoteAddr()
+            );
+
             return "register";
         } catch (PasswordUnacceptableException e) {
             bindingResult.rejectValue("password", "password.unacceptable", e.getMessage());
+
+            auditLogService.logAuth(
+                    null,
+                    AuditAction.REGISTER,
+                    AuditStatus.FAILURE,
+                    AuditResource.AUTH,
+                    request.getRemoteAddr()
+            );
+
             return "register";
         }
 

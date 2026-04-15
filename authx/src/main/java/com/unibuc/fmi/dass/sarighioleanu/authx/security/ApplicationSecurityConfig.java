@@ -8,26 +8,34 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
+@EnableMethodSecurity
 public class ApplicationSecurityConfig {
 
     private final PasswordEncoder passwordEncoder;
     private final UserService userService;
+    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
     private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
+    private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
     @Autowired
     public ApplicationSecurityConfig(
             PasswordEncoder passwordEncoder,
             UserService userService,
-            CustomAuthenticationFailureHandler customAuthenticationFailureHandler
+            CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler,
+            CustomAuthenticationFailureHandler customAuthenticationFailureHandler,
+            CustomLogoutSuccessHandler customLogoutSuccessHandler
     ){
         this.passwordEncoder = passwordEncoder;
         this.userService = userService;
+        this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
         this.customAuthenticationFailureHandler = customAuthenticationFailureHandler;
+        this.customLogoutSuccessHandler = customLogoutSuccessHandler;
     }
 
     @Bean
@@ -65,15 +73,17 @@ public class ApplicationSecurityConfig {
                 .formLogin(form ->
                         form.loginPage("/login")
                                 .permitAll()
+                                .successHandler(customAuthenticationSuccessHandler)
                                 .failureHandler(customAuthenticationFailureHandler)
-                                .defaultSuccessUrl("/dashboard", true)
+                                //.defaultSuccessUrl("/dashboard", true)
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .clearAuthentication(true)
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
-                        .logoutSuccessUrl("/login?logout")
+                        .logoutSuccessHandler(customLogoutSuccessHandler)
+                        //.logoutSuccessUrl("/login?logout")
                 );
 
         return http.build();

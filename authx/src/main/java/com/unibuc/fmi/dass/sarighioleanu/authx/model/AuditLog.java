@@ -16,18 +16,22 @@ public class AuditLog {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false)
     private String action;
+
+    @Column(nullable = false)
     private String resource;
 
-    @Column(name = "resource_id", nullable = false, length = 100)
+    @Column(name = "resource_id", nullable = true)
     private String resourceId;
 
     @CreationTimestamp
     private OffsetDateTime timestamp;
 
-    @Column(name = "ip_address", length = 50)
+    @Column(name = "ip_address",nullable = false)
     private String ipAddress;
+
+    public AuditLog() {}
 
     public AuditLog(String id, User user, String action, String resource, String resourceId, OffsetDateTime timestamp, String ipAddress) {
         this.id = id;
@@ -38,8 +42,6 @@ public class AuditLog {
         this.timestamp = timestamp;
         this.ipAddress = ipAddress;
     }
-
-    public AuditLog() {}
 
     public String getId() {
         return id;

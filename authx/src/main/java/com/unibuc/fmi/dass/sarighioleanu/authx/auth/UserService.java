@@ -49,7 +49,7 @@ public class UserService implements UserDetailsService {
         return  org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())
                 .password(user.getPasswordHash())
-                .authorities(user.getRole().name())
+                .authorities("ROLE_"+user.getRole().name())
                 .accountLocked(!accountUnlocked)
                 .build();
 
@@ -61,7 +61,7 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
-    public void registerUser(String email, String rawPassword) throws PasswordUnacceptableException {
+    public User registerUser(String email, String rawPassword) throws PasswordUnacceptableException {
         if (userRepository.findByEmail(email.toLowerCase()).isPresent()) {
             throw new EmailAlreadyExistsException("Email already in use");
         }
@@ -80,7 +80,7 @@ public class UserService implements UserDetailsService {
         user.setPasswordHash(passwordEncoder.encode(rawPassword));
         user.setRole(UserRole.ANALYST);
 
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
 

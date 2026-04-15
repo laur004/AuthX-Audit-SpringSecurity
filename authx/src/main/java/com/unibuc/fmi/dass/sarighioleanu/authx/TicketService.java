@@ -1,7 +1,6 @@
 package com.unibuc.fmi.dass.sarighioleanu.authx;
 
 import com.unibuc.fmi.dass.sarighioleanu.authx.model.Ticket;
-import com.unibuc.fmi.dass.sarighioleanu.authx.model.User;
 import com.unibuc.fmi.dass.sarighioleanu.authx.repository.TicketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -42,8 +41,8 @@ public class TicketService {
         ticketRepository.deleteById(id);
     }
 
-    public void save(Ticket ticket) {
-        ticketRepository.save(ticket);
+    public Ticket save(Ticket ticket) {
+        return ticketRepository.save(ticket);
     }
 
 }

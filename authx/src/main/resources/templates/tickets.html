@@ -18,7 +18,7 @@
         <br />
 
 
-        <ul>
+        <ul style="list-style: none;">
             <li  th:each="ticket: ${tickets}" >
                 <div style="border: 1px solid black;">
                     <span th:text="|${ticket.getTitle()} - ${ticket.getSeverityLevel().name()} - ${ticket.getStatus()}, created at ${ticket.createdAt.toString()}, last update at ${ticket.updatedAt.toString()}|"></span>

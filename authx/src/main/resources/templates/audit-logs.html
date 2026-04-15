@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="utf-8">
+        <title>Tickets Page</title>
+    </head>
+    <body>
+        <a th:href="@{/dashboard}">Back</a>
+        <h1>Audit Logs Page</h1>
+
+        <br />
+        <br />
+
+        <ul style="list-style: none;">
+            <li  th:each="log: ${auditLogs}" >
+                <div style="border: 1px solid black;">
+                    <span th:text="|Action: ${log.getAction()} - ${log.getTimestamp()}|"></span>
+                    <p th:text="|User: ${log.user != null ? log.user.email : 'Anonymous'} - ${log.getIpAddress()}|"></p>
+                    <p th:text="|Resource: ${log.getResource()} ${log.getResourceId()!= null ? log.getResourceId() : '' }|"></p>
+                </div>
+                <br />
+            </li>
+        </ul>
+
+    </body>
+</html>

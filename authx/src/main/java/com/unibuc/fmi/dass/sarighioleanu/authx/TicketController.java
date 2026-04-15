@@ -3,10 +3,9 @@ package com.unibuc.fmi.dass.sarighioleanu.authx;
 import com.unibuc.fmi.dass.sarighioleanu.authx.auth.UserService;
 import com.unibuc.fmi.dass.sarighioleanu.authx.dto.TicketRequest;
 import com.unibuc.fmi.dass.sarighioleanu.authx.model.*;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -21,11 +20,21 @@ public class TicketController {
 
     private final TicketService ticketService;
     private final UserService userService;
+    private final AuditLogService auditLogService;
+    private final CurrentUserProvider currentUserProvider;
+
 
     @Autowired
-    public TicketController(TicketService ticketService, UserService userService) {
+    public TicketController(
+            TicketService ticketService,
+            UserService userService,
+            AuditLogService auditLogService,
+            CurrentUserProvider currentUserProvider
+    ) {
         this.ticketService = ticketService;
         this.userService = userService;
+        this.auditLogService = auditLogService;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @GetMapping("/tickets")
@@ -34,15 +43,7 @@ public class TicketController {
             Model model
     ) {
 
-        String ownerEmail = "";
-
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if(principal instanceof UserDetails) {
-            ownerEmail = ((UserDetails)principal).getUsername();
-        } else{
-            ownerEmail = principal.toString();
-        }
-        User owner = userService.loadUserByEmail(ownerEmail);
+        User owner = currentUserProvider.getCurrentUser();
 
 
         List<Ticket> tickets;
@@ -77,7 +78,8 @@ public class TicketController {
 
     @PostMapping("/create-ticket")
     public String createTicket(
-            @ModelAttribute("ticket") TicketRequest ticket
+            @ModelAttribute("ticket") TicketRequest ticket,
+            HttpServletRequest request
     ){
         Ticket t = new Ticket();
         t.setTitle(ticket.getTitle());
@@ -90,17 +92,18 @@ public class TicketController {
         t.setCreatedAt(date);
         t.setUpdatedAt(date);
 
-        String ownerEmail = "";
-
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if(principal instanceof UserDetails) {
-            ownerEmail = ((UserDetails)principal).getUsername();
-        } else{
-            ownerEmail = principal.toString();
-        }
-        User owner = userService.loadUserByEmail(ownerEmail);
+        User owner = currentUserProvider.getCurrentUser();
         t.setOwner(owner);
-        ticketService.save(t);
+
+        Ticket savedTicket = ticketService.save(t);
+
+        auditLogService.logTicket(
+                AuditAction.CREATE_TICKET,
+                AuditStatus.SUCCESS,
+                AuditResource.TICKET,
+                savedTicket.getId().toString(),
+                request.getRemoteAddr()
+        );
 
         return  "redirect:/tickets";
     }
@@ -122,45 +125,78 @@ public class TicketController {
 
     @PostMapping("/edit-ticket")
     public String editTicket(
-            @ModelAttribute("ticket") Ticket formTicket
+            @ModelAttribute("ticket") Ticket formTicket,
+            HttpServletRequest request
     ){
-        Ticket existingTicket = getTicketAndCheckOwnership(formTicket.getId());
+        try{
 
-        existingTicket.setTitle(formTicket.getTitle());
-        existingTicket.setDescription(formTicket.getDescription());
-        existingTicket.setSeverityLevel(formTicket.getSeverityLevel());
-        existingTicket.setStatus(formTicket.getStatus());
-        existingTicket.setUpdatedAt(OffsetDateTime.now());
+            Ticket existingTicket = getTicketAndCheckOwnership(formTicket.getId());
 
-        ticketService.save(existingTicket);
+            existingTicket.setTitle(formTicket.getTitle());
+            existingTicket.setDescription(formTicket.getDescription());
+            existingTicket.setSeverityLevel(formTicket.getSeverityLevel());
+            existingTicket.setStatus(formTicket.getStatus());
+            existingTicket.setUpdatedAt(OffsetDateTime.now());
+
+            Ticket updatedTicket = ticketService.save(existingTicket);
+
+            auditLogService.logTicket(
+                    AuditAction.EDIT_TICKET,
+                    AuditStatus.SUCCESS,
+                    AuditResource.TICKET,
+                    updatedTicket.getId().toString(),
+                    request.getRemoteAddr()
+            );
+
+        } catch (ResponseStatusException e){
+            auditLogService.logTicket(
+                    AuditAction.EDIT_TICKET,
+                    AuditStatus.FORBIDDEN,
+                    AuditResource.TICKET,
+                    formTicket.getId().toString(),
+                    request.getRemoteAddr()
+            );
+            throw e;
+        }
 
         return "redirect:/tickets";
     }
 
     @PostMapping("/delete-ticket/{ticketId}")
     public String deleteTicket(
-            @PathVariable Long ticketId
+            @PathVariable Long ticketId,
+            HttpServletRequest request
     ){
-        Ticket ticket = getTicketAndCheckOwnership(ticketId);
-        ticketService.deleteTicketById(ticket.getId());
+        try{
+            Ticket ticket = getTicketAndCheckOwnership(ticketId);
+            ticketService.deleteTicketById(ticket.getId());
+
+            auditLogService.logTicket(
+                    AuditAction.DELETE_TICKET,
+                    AuditStatus.SUCCESS,
+                    AuditResource.TICKET,
+                    ticketId.toString(),
+                    request.getRemoteAddr()
+            );
+        } catch (ResponseStatusException e){
+            auditLogService.logTicket(
+                    AuditAction.DELETE_TICKET,
+                    AuditStatus.FORBIDDEN,
+                    AuditResource.TICKET,
+                    ticketId.toString(),
+                    request.getRemoteAddr()
+            );
+            throw e;
+        }
+
         return "redirect:/tickets";
     }
 
     private Ticket getTicketAndCheckOwnership(@PathVariable Long ticketId) {
-        String ownerEmail = "";
-
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if(principal instanceof UserDetails) {
-            ownerEmail = ((UserDetails)principal).getUsername();
-        } else{
-            ownerEmail = principal.toString();
-        }
-        User owner = userService.loadUserByEmail(ownerEmail);
-
+        User  owner = currentUserProvider.getCurrentUser();
         if(owner.getRole() == UserRole.MANAGER) {
             return ticketService.getTicketById(ticketId);
         }
-
         return ticketService.getTicketForOwner(ticketId, owner.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied"));
     }
