@@ -61,6 +61,18 @@ public class AuditLogService {
         log(user, action, status, resource, null, ipAddress);
     }
 
+    public void logAccountBlocked(String userId, String ipAddress) {
+        AuditLog log = new AuditLog();
+        log.setUser(null);
+        log.setAction(AuditAction.ACCOUNT_BLOCKED.name());
+        log.setResource(AuditResource.AUTH.name());
+        log.setResourceId(userId);
+        log.setTimestamp(OffsetDateTime.now());
+        log.setIpAddress(ipAddress);
+
+        auditLogRepository.save(log);
+    }
+
     public void logTicket(
             AuditAction action,
             AuditStatus status,
