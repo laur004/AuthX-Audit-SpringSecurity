@@ -7,14 +7,14 @@
     <body>
         <h1>Please Log In</h1>
         <form th:action="@{/login}" method="post">
+            <p th:if="${param.error}">Invalid email or password</p>
+            <p th:if="${param.locked}">Too many failed login attempts. Try again later.</p>
             <div>
-                <input type="email" name="email" placeholder="Email" required/>
-                <p th:if="${param.emailError}" th:text="${param.emailError}"></p>
+                <input type="email" name="username" placeholder="Email" required/>
             </div>
             <div>
                 <input type="password" name="password" placeholder="Password" required/>
                 <a th:href="@{/forgot-password}">Forgot password?</a>
-                <p th:if="${param.passwordError}" th:text="${param.passwordError}"></p>
             </div>
             <input type="submit" value="Log in" />
         </form>

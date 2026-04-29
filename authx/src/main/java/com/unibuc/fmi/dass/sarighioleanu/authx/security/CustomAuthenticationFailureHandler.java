@@ -1,44 +1,48 @@
 package com.unibuc.fmi.dass.sarighioleanu.authx.security;
 
-import jakarta.servlet.ServletException;
+import com.unibuc.fmi.dass.sarighioleanu.authx.AuditLogService;
+import com.unibuc.fmi.dass.sarighioleanu.authx.model.AuditAction;
+import com.unibuc.fmi.dass.sarighioleanu.authx.model.AuditResource;
+import com.unibuc.fmi.dass.sarighioleanu.authx.model.AuditStatus;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 @Component
 public class CustomAuthenticationFailureHandler implements AuthenticationFailureHandler {
+
+    private final AuditLogService auditLogService;
+
+    @Autowired
+    public CustomAuthenticationFailureHandler(AuditLogService auditLogService) {
+        this.auditLogService = auditLogService;
+    }
 
     @Override
     public void onAuthenticationFailure(
             HttpServletRequest request,
             HttpServletResponse response,
             AuthenticationException exception
-    ) throws IOException, ServletException {
-        String emailError = "";
-        String passwordError = "";
+    ) throws IOException {
 
-        if(exception instanceof UsernameNotFoundException) {
-            emailError = "Email not found";
-        } else if(exception instanceof BadCredentialsException){
-            passwordError = "Invalid password";
+        auditLogService.logAuth(
+                null,
+                AuditAction.LOGIN,
+                AuditStatus.FAILURE,
+                AuditResource.AUTH,
+                request.getRemoteAddr()
+        );
+
+        if (exception instanceof LockedException) {
+            response.sendRedirect("/login?locked");
         } else {
-            emailError = "Authentication Failed";
+            response.sendRedirect("/login?error");
         }
-
-        String redirectUrl = "/login?emailError=" +
-                URLEncoder.encode(emailError, StandardCharsets.UTF_8) +
-                "&passwordError=" +
-                URLEncoder.encode(passwordError, StandardCharsets.UTF_8);
-
-        response.sendRedirect(redirectUrl);
-
     }
 }

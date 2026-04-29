@@ -5,8 +5,12 @@ import com.unibuc.fmi.dass.sarighioleanu.authx.model.PasswordResetToken;
 import com.unibuc.fmi.dass.sarighioleanu.authx.model.User;
 import com.unibuc.fmi.dass.sarighioleanu.authx.repository.PasswordResetTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.password.CompromisedPasswordChecker;
+import org.springframework.security.authentication.password.CompromisedPasswordDecision;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 public class ResetPasswordService {
@@ -17,6 +21,8 @@ public class ResetPasswordService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenGenerator tokenGenerator;
+    private final CompromisedPasswordChecker compromisedPasswordChecker;
+
 
     @Autowired
     public ResetPasswordService(
@@ -24,13 +30,15 @@ public class ResetPasswordService {
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             TokenGenerator tokenGenerator,
-            EmailService emailService
+            EmailService emailService,
+            CompromisedPasswordChecker compromisedPasswordChecker
     ) {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenGenerator = tokenGenerator;
         this.emailService = emailService;
+        this.compromisedPasswordChecker = compromisedPasswordChecker;
     }
 
 
@@ -42,6 +50,8 @@ public class ResetPasswordService {
         PasswordResetToken resetToken = new PasswordResetToken();
         resetToken.setToken(token);
         resetToken.setUser(user);
+        resetToken.setExpiresAt(LocalDateTime.now().plusMinutes(5));
+        resetToken.setUsed(false);
         passwordResetTokenRepository.save(resetToken);
 
         emailService.sendResetPasswordEmail(
@@ -54,9 +64,31 @@ public class ResetPasswordService {
         PasswordResetToken token = passwordResetTokenRepository.findByToken(rawToken)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
 
+        if(token.isUsed() || token.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new ResetPasswordTokenExpiredException("Token expired. Please generate another token.");
+        }
+
+        if (newPassword == null || newPassword.length() < 8 || !newPassword.matches("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^A-Za-z\\d]).+$")) {
+            throw new PasswordUnacceptableException("Password should be at least 8 characters and contain at least upper, lower, digit and special character.");
+        }
+
+        CompromisedPasswordDecision decision = compromisedPasswordChecker.check(newPassword);
+        if (decision.isCompromised()) {
+            throw new PasswordUnacceptableException("Choose a different password.");
+        }
+
         User user = token.getUser();
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+
+         token.setUsed(true);
+         passwordResetTokenRepository.save(token);
+    }
+
+    public User findUserByToken(String token) {
+        return passwordResetTokenRepository.findByToken(token)
+                .map(PasswordResetToken::getUser)
+                .orElse(null);
     }
 
 }

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TicketService {
@@ -32,12 +33,16 @@ public class TicketService {
                 .findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(query, query);
     }
 
+    public Optional<Ticket> getTicketForOwner(Long ticketId, Long ownerId) {
+        return ticketRepository.findByIdAndOwnerId(ticketId, ownerId);
+    }
+
     public void deleteTicketById(Long id) {
         ticketRepository.deleteById(id);
     }
 
-    public void save(Ticket ticket) {
-        ticketRepository.save(ticket);
+    public Ticket save(Ticket ticket) {
+        return ticketRepository.save(ticket);
     }
 
 }

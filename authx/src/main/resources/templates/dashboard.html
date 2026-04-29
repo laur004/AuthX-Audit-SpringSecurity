@@ -8,6 +8,7 @@
         <h1>Dashboard Page</h1>
 
         <a th:href="@{/tickets}">See tickets</a>
+        <a th:if="${showLogsBtn}" th:href="@{/audit-logs}">Logs</a>
         <br /> <br />
         <hr />
 
